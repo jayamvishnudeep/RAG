@@ -1,0 +1,29 @@
+{
+  "name": "rag-explorer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "install:all": "npm install && npm --prefix web install",
+    "server": "node server/index.js",
+    "web": "npm --prefix web run dev",
+    "dev": "concurrently -n api,web -c cyan,green \"npm:server\" \"npm:web\""
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.0",
+    "@lancedb/lancedb": "^0.39.0",
+    "chromadb": "^3.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0",
+    "multer": "^2.0.0",
+    "pdfjs-dist": "^5.4.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  },
+  "allowScripts": {
+    "onnxruntime-node@1.30.0": true,
+    "protobufjs@7.6.6": true
+  }
+}
