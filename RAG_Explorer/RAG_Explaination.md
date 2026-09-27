@@ -187,7 +187,7 @@ memory instead of from the text in front of it. That's why the instruction in
 §4's prompt — *"answer using ONLY the context below… if it's not in the
 context, say you don't know"* — is doing real work, not decoration; it is the
 same anti-hallucination discipline this whole repo is built around
-(see [`01_LLM_Basics`](../01_LLM_Basics)).
+(see [`01_LLM_Basics`](../../01_LLM_Basics)).
 
 ## 6. Embeddings
 
