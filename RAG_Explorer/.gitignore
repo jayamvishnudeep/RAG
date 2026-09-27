@@ -1,0 +1,16 @@
+# Secrets
+.env
+
+# The confidential source document — the PDF stays local, it is not this repo's
+# to publish. Anyone cloning drops their own PDF into data/.
+data/*.pdf
+
+# Embedding model weights, downloaded on first run (~132 MB)
+.models/
+
+# The vector index, rebuilt on every ingest
+.lancedb/
+
+# Dependencies and build output
+node_modules/
+web/dist/
