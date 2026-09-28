@@ -25,6 +25,7 @@ patterns against.
 | [n8n workflows/01_Naive_RAG.png](n8n%20workflows/01_Naive_RAG.png) | Canvas screenshot of version 1 |
 | [n8n workflows/01_Naive_RAG_Loop_CSV_Parser.png](n8n%20workflows/01_Naive_RAG_Loop_CSV_Parser.png) | Canvas screenshot of version 2 |
 | [data/Wingify_Login_100_Jira_Test_Cases.csv](data/Wingify_Login_100_Jira_Test_Cases.csv) | The knowledge base: 100 test cases, `WING-LOGIN-TC-001` to `-100`, 10 per category |
+| [data/pinecone vector database.png](data/pinecone%20vector%20database.png) | The `rag-naive` index in the Pinecone console after a version-2 ingest |
 
 The CSV covers ten categories of 10 cases each: Authentication, Email
 validation, Password and boundaries, Navigation and usability, Password
@@ -87,6 +88,48 @@ current turn. In short, it must:
 
 The full prompt is in the AI Agent node's **System Message** option.
 
+## The Pinecone index
+
+Pinecone is a hosted vector database. It stores each chunk as a **record**:
+a vector (the chunk's embedding, 3072 numbers from `text-embedding-3-large`)
+plus a metadata object. Given a query vector, it returns the records whose
+vectors are closest by cosine similarity. Both workflows use one index,
+`rag-naive`, in the `__default__` namespace. The ingestion phase writes to it,
+and the chat agent's tool reads from it.
+
+![rag-naive index in the Pinecone console](data/pinecone%20vector%20database.png)
+
+Here is what the console shows after one version-2 ingest of the CSV:
+
+| Field | Value | Meaning |
+|---|---|---|
+| Record count | **104** | 100 test cases gave 104 chunks, so 4 rows were longer than the splitter's 1000 characters and became 2 chunks each. Any other count means a partial or repeated ingest |
+| Type | Dense | Every record has a full-length embedding vector (not sparse keyword weights) |
+| Region | AWS `us-east-1` | Where the serverless index is hosted |
+| Namespace | `__default__` | The workflows don't set a namespace, so everything goes into the default one |
+
+Each record's metadata holds what the **Default Data Loader** attached in version 2
+(`testCaseId`, `summary`, `category`, `priority`, `testType`, `executionStatus`,
+`environment`) plus fields n8n adds itself:
+
+| n8n field | What it is |
+|---|---|
+| `text` | The chunk's own text. This is what the agent actually reads |
+| `blobType` | The loader's content type, `text/plain` |
+| `loc.lines.from` / `loc.lines.to` | Which lines of that row's `pageContent` the chunk covers. A single-chunk case runs from line 1 to the end; a split case has two records with different ranges |
+
+**Checking retrieval by hand.** In the index's **Browser** tab, choose **Search by
+ID** and paste any record's `_id`. Pinecone uses that record's vector as the query.
+The top hit is the record itself (score ≈ 1.0, 0.9998 in the screenshot). The
+hits after it are its nearest neighbours. In the screenshot, the second hit
+(0.8612) is another *Password recovery* case. This is the same kind of similarity
+search the agent's tool runs, except the tool embeds the user's question
+first and keeps only the top 3 (version 1) or top 5 (version 2).
+
+The free Starter plan's usage panel (RUs = read units, WUs = write units,
+storage) is shown bottom-left. One full ingest of this CSV is roughly 5 MB and
+a few thousand WUs, well inside the free limits.
+
 ## Requirements
 
 | Thing | Notes |
@@ -119,7 +162,8 @@ The full prompt is in the AI Agent node's **System Message** option.
 2. Upload [data/Wingify_Login_100_Jira_Test_Cases.csv](data/Wingify_Login_100_Jira_Test_Cases.csv)
    in the `Docs` field and submit.
 3. Version 2 loops 100 times, one row per pass, then ends on **Ingestion
-   Complete**. Check the index's record count in the Pinecone console.
+   Complete**. Check the index's record count in the Pinecone console. After one
+   version-2 ingest it should be **104** (see [The Pinecone index](#the-pinecone-index)).
 
 **2 — Ask questions**
 
@@ -144,6 +188,6 @@ mix of chunks that do and do not carry metadata.
 | `No file found on the incoming item — check the form upload.` | The form was submitted without a file. Resubmit with the CSV in `Docs` |
 | The first column of the first row is garbled, or the header `Test Case ID` is not found | The CSV has a UTF-8 BOM and you are on version 1. Version 2's **Normalize CSV Upload** strips it |
 | Ingestion stops partway in version 2 | Open the execution — the batch-of-1 loop shows exactly which row failed |
-| Duplicate cases in answers after re-running ingestion | Each run inserts again; it does not upsert. Clear the index before re-ingesting |
+| Duplicate cases in answers, or a record count above 104 | Each run inserts new records instead of upserting existing ones. Clear the index before re-ingesting |
 | Credential errors on import | Re-select your own credentials in every Pinecone, Embeddings and Chat Model node (Setup step 4) |
 | Retrieval on wording (not IDs) feels weak | The splitter uses 0 overlap, which can cut sentences. Set chunk overlap to 100–150 on the text splitter and re-ingest |
