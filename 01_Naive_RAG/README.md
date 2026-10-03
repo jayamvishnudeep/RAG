@@ -24,6 +24,9 @@ patterns against.
 | [n8n workflows/01_Naive_RAG_Loop_CSV_Parser.json](n8n%20workflows/01_Naive_RAG_Loop_CSV_Parser.json) | Version 2: parses the CSV row by row, one document per test case, with metadata. Retrieves top 5 |
 | [n8n workflows/01_Naive_RAG.png](n8n%20workflows/01_Naive_RAG.png) | Canvas screenshot of version 1 |
 | [n8n workflows/01_Naive_RAG_Loop_CSV_Parser.png](n8n%20workflows/01_Naive_RAG_Loop_CSV_Parser.png) | Canvas screenshot of version 2 |
+| [n8n workflows/Phase_1_Ingestion.png](n8n%20workflows/Phase_1_Ingestion.png) | Close-up of version 2's ingestion phase |
+| [n8n workflows/Phase_2_RAG.png](n8n%20workflows/Phase_2_RAG.png) | Close-up of version 2's chat phase after a successful run |
+| [n8n workflows/Result_Fetch_testcases_successfully.png](n8n%20workflows/Result_Fetch_testcases_successfully.png) | A real answer from version 2's chat |
 | [data/Wingify_Login_100_Jira_Test_Cases.csv](data/Wingify_Login_100_Jira_Test_Cases.csv) | The knowledge base: 100 test cases, `WING-LOGIN-TC-001` to `-100`, 10 per category |
 | [data/pinecone vector database.png](data/pinecone%20vector%20database.png) | The `rag-naive` index in the Pinecone console after a version-2 ingest |
 
@@ -56,6 +59,8 @@ case it belongs to.
 The RAG phase is the same as version 1 except top K is **5**. The ingestion
 phase is rebuilt:
 
+![Version 2's ingestion phase: On form submission, Normalize CSV Upload, Extract CSV Rows, Build Test Case Documents, then Loop One Test Case feeding the Pinecone Vector Store one row at a time, with Ingestion Complete on the done branch](n8n%20workflows/Phase_1_Ingestion.png)
+
 | Node | What it does |
 |---|---|
 | On form submission | Same form, file field `Docs` |
@@ -71,6 +76,12 @@ Because the ID and summary are stored in the **metadata** of every chunk, not
 just in the text, a chunk cut from the middle of a long case still knows which
 case it came from. The agent's system prompt is updated to read those metadata
 fields when filling in IDs.
+
+The chat phase after a successful question. The agent called the model twice,
+first to decide on a search and then to write the answer. It also used the
+Pinecone tool, which returned the top **5** chunks:
+
+![Version 2's chat phase after a run: When chat message received feeds the AI Agent, with OpenAI Chat Model and Simple Memory each showing 2 items and Pinecone Vector Store1 returning 5 items through Embeddings OpenAI1](n8n%20workflows/Phase_2_RAG.png)
 
 ### The agent's system prompt (both versions)
 
@@ -174,6 +185,14 @@ a few thousand WUs, well inside the free limits.
    - `Which tests cover Remember me?`
    - `Write me five new test cases for SSO` — should be declined
    - `What is the weather today?` — should say it found nothing in the knowledge base
+
+Here is a real answer from version 2. Each retrieved case comes back as a
+table row with its Test Case ID, summary, category, steps and expected result.
+Below the table, the agent notes that "Actual Result" was missing from the
+retrieved text, so it wrote *Not provided in retrieved context* rather than
+guessing:
+
+![The n8n chat returning a table of retrieved login test cases, including WING-LOGIN-TC-009 and WING-LOGIN-TC-089, with a note that missing Actual Result values were marked Not provided in retrieved context](n8n%20workflows/Result_Fetch_testcases_successfully.png)
 
 Use one workflow at a time against the index. Both write to `rag-naive`, so
 running both, or running version 1 and then version 2, leaves the index with a
