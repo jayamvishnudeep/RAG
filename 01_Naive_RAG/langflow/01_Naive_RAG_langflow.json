@@ -688,7 +688,7 @@
                 "selected": "Table",
                 "name": "dataframe",
                 "hidden": null,
-                "display_name": "Raw Content",
+                "display_name": "Structured Content",
                 "method": "load_files_structured",
                 "value": "__UNDEFINED__",
                 "cache": true,
@@ -791,7 +791,7 @@
               }
             },
             "tool_mode": false,
-            "last_updated": "2026-10-07T21:44:31.033Z",
+            "last_updated": "2026-10-07T22:26:20.510Z",
             "lf_version": "1.12.4"
           },
           "selected_output": "dataframe",
@@ -1698,7 +1698,7 @@
             ],
             "frozen": false,
             "icon": "AstraDB",
-            "last_updated": "2026-10-07T21:44:31.045Z",
+            "last_updated": "2026-10-07T22:26:20.525Z",
             "legacy": false,
             "lf_version": "1.12.0",
             "metadata": {
@@ -2453,7 +2453,7 @@
                 "type": "other",
                 "value": ""
               },
-              "is_refresh": true,
+              "is_refresh": false,
               "keyspace": {
                 "_input_type": "DropdownInput",
                 "advanced": true,
@@ -2896,7 +2896,7 @@
                 "trace_as_input": true,
                 "track_in_telemetry": false,
                 "type": "prompt",
-                "value": "Astra DB Search Results -> Prompt{Context}\nChat Input -> Prompt{Question}"
+                "value": "You are a QA assistant answering questions about a library of test cases.\n\nAnswer using ONLY the test cases in the Context below. Do not use outside knowledge, and never invent test cases, Test Case IDs, steps, test data or expected results.\n\nRules:\n- Name the Test Case ID for every test case you mention, exactly as it appears in the Context (for example INVALID-016).\n- Keep each case's description, steps and expected result together. Never combine parts of different cases.\n- If the Context does not answer the question, say so plainly, then give whatever related cases it does contain.\n- The Context holds only the few most relevant cases, not the whole library. Never say or imply your list is complete.\n- Present several cases as a table with the columns: Test Case ID, Description, Steps, Expected Result.\n\nContext:\n{Context}\n\nQuestion:\n{Question}"
               },
               "tool_placeholder": {
                 "_input_type": "MessageTextInput",
@@ -2962,208 +2962,7 @@
         "type": "genericNode",
         "measured": {
           "width": 320,
-          "height": 409
-        }
-      },
-      {
-        "data": {
-          "id": "TypeConverterComponent-ZnCkR",
-          "node": {
-            "base_classes": [
-              "JSON",
-              "Message",
-              "Table"
-            ],
-            "beta": false,
-            "conditional_paths": [],
-            "custom_fields": {},
-            "description": "Convert between different types (Message, JSON, Table)",
-            "display_name": "Type Convert",
-            "documentation": "https://docs.langflow.org/type-convert",
-            "edited": false,
-            "field_order": [
-              "input_data",
-              "auto_parse",
-              "output_type"
-            ],
-            "frozen": false,
-            "icon": "repeat",
-            "legacy": false,
-            "lf_version": "1.12.0",
-            "metadata": {
-              "code_hash": "6ce26e994c2d",
-              "dependencies": {
-                "dependencies": [
-                  {
-                    "name": "lfx",
-                    "version": null
-                  },
-                  {
-                    "name": "pandas",
-                    "version": "2.3.3"
-                  }
-                ],
-                "total_dependencies": 2
-              },
-              "module": "lfx.components.processing.converter.TypeConverterComponent"
-            },
-            "minimized": false,
-            "output_types": [],
-            "outputs": [
-              {
-                "allows_loop": false,
-                "cache": true,
-                "display_name": "Message Output",
-                "group_outputs": false,
-                "method": "convert_to_message",
-                "name": "message_output",
-                "selected": "Message",
-                "tool_mode": true,
-                "types": [
-                  "Message"
-                ],
-                "value": "__UNDEFINED__"
-              },
-              {
-                "allows_loop": false,
-                "cache": true,
-                "display_name": "JSON Output",
-                "group_outputs": false,
-                "method": "convert_to_data",
-                "name": "data_output",
-                "tool_mode": true,
-                "types": [
-                  "JSON"
-                ],
-                "value": "__UNDEFINED__"
-              },
-              {
-                "allows_loop": false,
-                "cache": true,
-                "display_name": "Table Output",
-                "group_outputs": false,
-                "method": "convert_to_dataframe",
-                "name": "dataframe_output",
-                "tool_mode": true,
-                "types": [
-                  "Table"
-                ],
-                "value": "__UNDEFINED__"
-              }
-            ],
-            "pinned": false,
-            "template": {
-              "_type": "Component",
-              "auto_parse": {
-                "_input_type": "BoolInput",
-                "advanced": true,
-                "api_editable": false,
-                "display_name": "Auto Parse",
-                "dynamic": false,
-                "info": "Detect and convert JSON/CSV strings automatically.",
-                "list": false,
-                "list_add_label": "Add More",
-                "name": "auto_parse",
-                "override_skip": false,
-                "placeholder": "",
-                "required": false,
-                "show": true,
-                "title_case": false,
-                "tool_mode": false,
-                "trace_as_metadata": true,
-                "track_in_telemetry": true,
-                "type": "bool",
-                "value": false
-              },
-              "code": {
-                "advanced": true,
-                "api_editable": false,
-                "dynamic": true,
-                "fileTypes": [],
-                "file_path": "",
-                "info": "",
-                "list": false,
-                "load_from_db": false,
-                "multiline": true,
-                "name": "code",
-                "password": false,
-                "placeholder": "",
-                "required": true,
-                "show": true,
-                "title_case": false,
-                "type": "code",
-                "value": "import json\nfrom typing import Any\n\nfrom lfx.custom import Component\nfrom lfx.io import BoolInput, HandleInput, Output, TabInput\nfrom lfx.schema import Data, DataFrame, Message\nfrom lfx.schema.data import JSON\nfrom lfx.schema.dataframe import Table\n\nMIN_CSV_LINES = 2\n\n\ndef convert_to_message(v) -> Message:\n    \"\"\"Convert input to Message type.\n\n    Args:\n        v: Input to convert (Message, Data, DataFrame, or dict)\n\n    Returns:\n        Message: Converted Message object\n    \"\"\"\n    return v if isinstance(v, Message) else v.to_message()\n\n\ndef convert_to_data(v: Table | Data | Message | dict, *, auto_parse: bool) -> JSON:\n    \"\"\"Convert input to JSON type.\n\n    Args:\n        v: Input to convert (Message, Data, Table, or dict)\n        auto_parse: Enable automatic parsing of structured data (JSON/CSV)\n\n    Returns:\n        JSON: Converted JSON object\n    \"\"\"\n    if isinstance(v, dict):\n        return Data(v)\n    if isinstance(v, Message):\n        data = Data(data={\"text\": v.data[\"text\"]})\n        return parse_structured_data(data) if auto_parse else data\n\n    return v if isinstance(v, Data) else v.to_data()\n\n\ndef convert_to_dataframe(v: Table | Data | Message | dict, *, auto_parse: bool) -> Table:\n    \"\"\"Convert input to Table type.\n\n    Args:\n        v: Input to convert (Message, Data, Table, or dict)\n        auto_parse: Enable automatic parsing of structured data (JSON/CSV)\n\n    Returns:\n        Table: Converted Table object\n    \"\"\"\n    import pandas as pd\n\n    if isinstance(v, dict):\n        return DataFrame([v])\n    if isinstance(v, DataFrame):\n        return v\n    # Handle pandas DataFrame\n    if isinstance(v, pd.DataFrame):\n        # Convert pandas DataFrame to our DataFrame by creating Data objects\n        return DataFrame(data=v)\n\n    if isinstance(v, Message):\n        data = Data(data={\"text\": v.data[\"text\"]})\n        return parse_structured_data(data).to_dataframe() if auto_parse else data.to_dataframe()\n    # For other types, call to_dataframe method\n    return v.to_dataframe()\n\n\ndef parse_structured_data(data: JSON) -> JSON:\n    \"\"\"Parse structured data (JSON, CSV) from JSON's text field.\n\n    Args:\n        data: JSON object with text content to parse\n\n    Returns:\n        JSON: Modified JSON object with parsed content or original if parsing fails\n    \"\"\"\n    raw_text = data.get_text() or \"\"\n    text = raw_text.lstrip(\"\\ufeff\").strip()\n\n    # Try JSON parsing first\n    parsed_json = _try_parse_json(text)\n    if parsed_json is not None:\n        return parsed_json\n\n    # Try CSV parsing\n    if _looks_like_csv(text):\n        try:\n            return _parse_csv_to_data(text)\n        except Exception:  # noqa: BLE001\n            # Heuristic misfire or malformed CSV — keep original data\n            return data\n\n    # Return original data if no parsing succeeded\n    return data\n\n\ndef _try_parse_json(text: str) -> JSON | None:\n    \"\"\"Try to parse text as JSON and return JSON object.\"\"\"\n    try:\n        parsed = json.loads(text)\n\n        if isinstance(parsed, dict):\n            # Single JSON object\n            return Data(data=parsed)\n        if isinstance(parsed, list) and all(isinstance(item, dict) for item in parsed):\n            # Array of JSON objects - create JSON with the list\n            return Data(data={\"records\": parsed})\n\n    except (json.JSONDecodeError, ValueError):\n        pass\n\n    return None\n\n\ndef _looks_like_csv(text: str) -> bool:\n    \"\"\"Simple heuristic to detect CSV content.\"\"\"\n    lines = text.strip().split(\"\\n\")\n    if len(lines) < MIN_CSV_LINES:\n        return False\n\n    header_line = lines[0]\n    return \",\" in header_line and len(lines) > 1\n\n\ndef _parse_csv_to_data(text: str) -> JSON:\n    \"\"\"Parse CSV text and return JSON object.\"\"\"\n    from io import StringIO\n\n    import pandas as pd\n\n    # Parse CSV to DataFrame, then convert to list of dicts\n    parsed_df = pd.read_csv(StringIO(text))\n    records = parsed_df.to_dict(orient=\"records\")\n\n    return Data(data={\"records\": records})\n\n\nclass TypeConverterComponent(Component):\n    display_name = \"Type Convert\"\n    description = \"Convert between different types (Message, JSON, Table)\"\n    documentation: str = \"https://docs.langflow.org/type-convert\"\n    icon = \"repeat\"\n\n    inputs = [\n        HandleInput(\n            name=\"input_data\",\n            display_name=\"Input\",\n            input_types=[\"Message\", \"Data\", \"JSON\", \"DataFrame\", \"Table\"],\n            info=\"Accept Message, JSON or Table as input\",\n            required=True,\n        ),\n        BoolInput(\n            name=\"auto_parse\",\n            display_name=\"Auto Parse\",\n            info=\"Detect and convert JSON/CSV strings automatically.\",\n            advanced=True,\n            value=False,\n            required=False,\n        ),\n        TabInput(\n            name=\"output_type\",\n            display_name=\"Output Type\",\n            options=[\"Message\", \"JSON\", \"Table\"],\n            info=\"Select the desired output data type\",\n            real_time_refresh=True,\n            value=\"Message\",\n        ),\n    ]\n\n    # Define ALL outputs so they exist during validation\n    # update_frontend_node will filter to show only the selected one\n    outputs = [\n        Output(\n            display_name=\"Message Output\",\n            name=\"message_output\",\n            method=\"convert_to_message\",\n            types=[\"Message\"],\n        ),\n        Output(\n            display_name=\"JSON Output\",\n            name=\"data_output\",\n            method=\"convert_to_data\",\n            types=[\"JSON\"],\n        ),\n        Output(\n            display_name=\"Table Output\",\n            name=\"dataframe_output\",\n            method=\"convert_to_dataframe\",\n            types=[\"Table\"],\n        ),\n    ]\n\n    async def update_frontend_node(self, new_frontend_node: dict, current_frontend_node: dict):\n        \"\"\"Ensure outputs are synced with output_type when component is loaded.\"\"\"\n        # Call parent implementation first\n        await super().update_frontend_node(new_frontend_node, current_frontend_node)\n\n        # Then sync outputs with current output_type value\n        output_type = new_frontend_node.get(\"template\", {}).get(\"output_type\", {}).get(\"value\", \"Message\")\n        self.update_outputs(new_frontend_node, \"output_type\", output_type)\n\n        return new_frontend_node\n\n    def update_outputs(self, frontend_node: dict, field_name: str, field_value: Any) -> dict:\n        \"\"\"Dynamically show only the relevant output based on the selected output type.\"\"\"\n        if field_name == \"output_type\":\n            # Start with empty outputs\n            frontend_node[\"outputs\"] = []\n\n            # Add only the selected output type WITH TYPES SPECIFIED\n            if field_value == \"Message\":\n                frontend_node[\"outputs\"].append(\n                    Output(\n                        display_name=\"Message Output\",\n                        name=\"message_output\",\n                        method=\"convert_to_message\",\n                        types=[\"Message\"],\n                    ).to_dict()\n                )\n            elif field_value in (\"Data\", \"JSON\"):\n                frontend_node[\"outputs\"].append(\n                    Output(\n                        display_name=\"JSON Output\",\n                        name=\"data_output\",\n                        method=\"convert_to_data\",\n                        types=[\"JSON\"],\n                    ).to_dict()\n                )\n            elif field_value in (\"DataFrame\", \"Table\"):\n                frontend_node[\"outputs\"].append(\n                    Output(\n                        display_name=\"Table Output\",\n                        name=\"dataframe_output\",\n                        method=\"convert_to_dataframe\",\n                        types=[\"Table\"],\n                    ).to_dict()\n                )\n\n        return frontend_node\n\n    def convert_to_message(self) -> Message:\n        \"\"\"Convert input to Message type.\"\"\"\n        input_value = self.input_data[0] if isinstance(self.input_data, list) else self.input_data\n\n        # Handle string input by converting to Message first\n        if isinstance(input_value, str):\n            input_value = Message(text=input_value)\n\n        result = convert_to_message(input_value)\n        self.status = result\n        return result\n\n    def convert_to_data(self) -> JSON:\n        \"\"\"Convert input to JSON type.\"\"\"\n        input_value = self.input_data[0] if isinstance(self.input_data, list) else self.input_data\n\n        # Handle string input by converting to Message first\n        if isinstance(input_value, str):\n            input_value = Message(text=input_value)\n\n        result = convert_to_data(input_value, auto_parse=self.auto_parse)\n        self.status = result\n        return result\n\n    def convert_to_dataframe(self) -> Table:\n        \"\"\"Convert input to Table type.\"\"\"\n        input_value = self.input_data[0] if isinstance(self.input_data, list) else self.input_data\n\n        # Handle string input by converting to Message first\n        if isinstance(input_value, str):\n            input_value = Message(text=input_value)\n\n        result = convert_to_dataframe(input_value, auto_parse=self.auto_parse)\n        self.status = result\n        return result\n"
-              },
-              "input_data": {
-                "_input_type": "HandleInput",
-                "advanced": false,
-                "api_editable": false,
-                "display_name": "Input",
-                "dynamic": false,
-                "info": "Accept Message, JSON or Table as input",
-                "input_types": [
-                  "Message",
-                  "Data",
-                  "JSON",
-                  "DataFrame",
-                  "Table"
-                ],
-                "list": false,
-                "list_add_label": "Add More",
-                "name": "input_data",
-                "override_skip": false,
-                "placeholder": "",
-                "required": true,
-                "show": true,
-                "title_case": false,
-                "trace_as_metadata": true,
-                "track_in_telemetry": false,
-                "type": "other",
-                "value": ""
-              },
-              "output_type": {
-                "_input_type": "TabInput",
-                "advanced": false,
-                "api_editable": false,
-                "display_name": "Output Type",
-                "dynamic": false,
-                "info": "Select the desired output data type",
-                "name": "output_type",
-                "options": [
-                  "Message",
-                  "JSON",
-                  "Table"
-                ],
-                "override_skip": false,
-                "placeholder": "",
-                "real_time_refresh": true,
-                "required": false,
-                "show": true,
-                "title_case": false,
-                "tool_mode": false,
-                "trace_as_metadata": true,
-                "track_in_telemetry": true,
-                "type": "tab",
-                "value": "Message"
-              }
-            },
-            "tool_mode": false
-          },
-          "selected_output": "message_output",
-          "showNode": true,
-          "type": "TypeConverterComponent"
-        },
-        "dragging": false,
-        "id": "TypeConverterComponent-ZnCkR",
-        "position": {
-          "x": 335.6075131646466,
-          "y": 841.5712004442748
-        },
-        "selected": false,
-        "type": "genericNode",
-        "measured": {
-          "width": 320,
-          "height": 265
+          "height": 429
         }
       },
       {
@@ -3524,7 +3323,7 @@
             ],
             "frozen": false,
             "icon": "AstraDB",
-            "last_updated": "2026-10-07T21:44:31.052Z",
+            "last_updated": "2026-10-07T22:26:20.583Z",
             "legacy": false,
             "lf_version": "1.12.0",
             "metadata": {
@@ -4286,7 +4085,7 @@
                 "type": "other",
                 "value": ""
               },
-              "is_refresh": true,
+              "is_refresh": false,
               "keyspace": {
                 "_input_type": "DropdownInput",
                 "advanced": true,
@@ -4964,7 +4763,7 @@
             "extension_version": "1.1.23",
             "namespaced_id": "ext:groq:GroqModel@official",
             "name": "GroqModel",
-            "last_updated": "2026-10-07T21:44:31.057Z"
+            "last_updated": "2026-10-07T22:26:20.592Z"
           },
           "showNode": true,
           "selected_output": "text_output"
@@ -4974,6 +4773,208 @@
         "measured": {
           "width": 320,
           "height": 495
+        }
+      },
+      {
+        "id": "ParserComponent-gv7je",
+        "type": "genericNode",
+        "position": {
+          "x": 335.6075131646466,
+          "y": 841.5712004442748
+        },
+        "data": {
+          "id": "ParserComponent-gv7je",
+          "type": "ParserComponent",
+          "node": {
+            "base_classes": [
+              "Message"
+            ],
+            "beta": false,
+            "conditional_paths": [],
+            "custom_fields": {},
+            "description": "Extracts text using a template.",
+            "display_name": "Parser",
+            "documentation": "https://docs.langflow.org/parser",
+            "edited": false,
+            "field_order": [
+              "input_data",
+              "mode",
+              "pattern",
+              "sep"
+            ],
+            "frozen": false,
+            "icon": "braces",
+            "legacy": false,
+            "metadata": {
+              "code_hash": "7ab5fd0e0a10",
+              "dependencies": {
+                "dependencies": [
+                  {
+                    "name": "lfx",
+                    "version": null
+                  }
+                ],
+                "total_dependencies": 1
+              },
+              "module": "lfx.components.processing.parser.ParserComponent"
+            },
+            "minimized": false,
+            "output_types": [],
+            "outputs": [
+              {
+                "allows_loop": false,
+                "cache": true,
+                "display_name": "Parsed Text",
+                "group_outputs": false,
+                "method": "parse_combined_text",
+                "name": "parsed_text",
+                "selected": "Message",
+                "tool_mode": true,
+                "types": [
+                  "Message"
+                ],
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "pinned": false,
+            "template": {
+              "_type": "Component",
+              "code": {
+                "advanced": true,
+                "api_editable": false,
+                "dynamic": true,
+                "fileTypes": [],
+                "file_path": "",
+                "info": "",
+                "list": false,
+                "load_from_db": false,
+                "multiline": true,
+                "name": "code",
+                "password": false,
+                "placeholder": "",
+                "required": true,
+                "show": true,
+                "title_case": false,
+                "type": "code",
+                "value": "from lfx.custom.custom_component.component import Component\nfrom lfx.helpers.data import safe_convert\nfrom lfx.inputs.inputs import BoolInput, HandleInput, MessageTextInput, MultilineInput, TabInput\nfrom lfx.schema.data import Data\nfrom lfx.schema.dataframe import DataFrame\nfrom lfx.schema.message import Message\nfrom lfx.template.field.base import Output\n\n\nclass _DefaultDict(dict):\n    def __init__(self, data_item: Data):\n        super().__init__(data_item.data)\n        self.default_value = data_item.default_value\n\n    def __missing__(self, key):\n        return self.default_value if self.default_value is not None else \"\"\n\n\nclass ParserComponent(Component):\n    display_name = \"Parser\"\n    description = \"Extracts text using a template.\"\n    documentation: str = \"https://docs.langflow.org/parser\"\n    icon = \"braces\"\n\n    inputs = [\n        HandleInput(\n            name=\"input_data\",\n            display_name=\"JSON or Table\",\n            input_types=[\"DataFrame\", \"Table\", \"Data\", \"JSON\"],\n            info=\"Accepts a DataFrame, a Data object, or a list of Data objects.\",\n            required=True,\n        ),\n        TabInput(\n            name=\"mode\",\n            display_name=\"Mode\",\n            options=[\"Parser\", \"Stringify\"],\n            value=\"Parser\",\n            info=\"Convert into raw string instead of using a template.\",\n            real_time_refresh=True,\n        ),\n        MultilineInput(\n            name=\"pattern\",\n            display_name=\"Template\",\n            info=(\n                \"Use variables within curly brackets to extract column values for DataFrames \"\n                \"or key values for Data.\"\n                \"For example: `Name: {Name}, Age: {Age}, Country: {Country}`\"\n            ),\n            value=\"Text: {text}\",  # Example default\n            dynamic=True,\n            show=True,\n            required=True,\n        ),\n        MessageTextInput(\n            name=\"sep\",\n            display_name=\"Separator\",\n            advanced=True,\n            value=\"\\n\",\n            info=\"String used to separate rows/items.\",\n        ),\n    ]\n\n    outputs = [\n        Output(\n            display_name=\"Parsed Text\",\n            name=\"parsed_text\",\n            info=\"Formatted text output.\",\n            method=\"parse_combined_text\",\n        ),\n    ]\n\n    def update_build_config(self, build_config, field_value, field_name=None):\n        \"\"\"Dynamically hide/show `template` and enforce requirement based on `stringify`.\"\"\"\n        if field_name == \"mode\":\n            build_config[\"pattern\"][\"show\"] = self.mode == \"Parser\"\n            build_config[\"pattern\"][\"required\"] = self.mode == \"Parser\"\n            if field_value:\n                clean_data = BoolInput(\n                    name=\"clean_data\",\n                    display_name=\"Clean Data\",\n                    info=(\n                        \"Enable to clean the data by removing empty rows and lines \"\n                        \"in each cell of the DataFrame/ Data object.\"\n                    ),\n                    value=True,\n                    advanced=True,\n                    required=False,\n                )\n                build_config[\"clean_data\"] = clean_data.to_dict()\n            else:\n                build_config.pop(\"clean_data\", None)\n\n        return build_config\n\n    def _clean_args(self) -> tuple[DataFrame | None, Data | list[Data] | None]:\n        \"\"\"Prepare arguments based on input type.\"\"\"\n        input_data = self.input_data\n\n        match input_data:\n            case list() if all(isinstance(item, Data) for item in input_data):\n                return None, input_data\n            case DataFrame():\n                return input_data, None\n            case Data():\n                return None, input_data\n            case dict() if \"data\" in input_data:\n                try:\n                    if \"columns\" in input_data:  # Likely a DataFrame\n                        return DataFrame.from_dict(input_data), None\n                    # Likely a Data object\n                    return None, Data(**input_data)\n                except (TypeError, ValueError, KeyError) as e:\n                    msg = f\"Invalid structured input provided: {e!s}\"\n                    raise ValueError(msg) from e\n            case _:\n                msg = f\"Unsupported input type: {type(input_data)}. Expected DataFrame, Data, or list[Data].\"\n                raise ValueError(msg)\n\n    def parse_combined_text(self) -> Message:\n        \"\"\"Parse all rows/items into a single text or convert input to string if `stringify` is enabled.\"\"\"\n        # Early return for stringify option\n        if self.mode == \"Stringify\":\n            return self.convert_to_string()\n\n        df, data = self._clean_args()\n\n        lines = []\n        if df is not None:\n            for _, row in df.iterrows():\n                formatted_text = self.pattern.format(**row.to_dict())\n                lines.append(formatted_text)\n        elif data is not None:\n            data_items = data if isinstance(data, list) else [data]\n            for data_item in data_items:\n                formatted_text = self.pattern.format_map(_DefaultDict(data_item))\n                lines.append(formatted_text)\n\n        combined_text = self.sep.join(lines)\n        self.status = combined_text\n        return Message(text=combined_text)\n\n    def convert_to_string(self) -> Message:\n        \"\"\"Convert input data to string with proper error handling.\"\"\"\n        clean_data = getattr(self, \"clean_data\", False)\n        if isinstance(self.input_data, list):\n            result = \"\\n\".join(safe_convert(item, clean_data=clean_data) for item in self.input_data)\n        else:\n            result = safe_convert(self.input_data, clean_data=clean_data)\n        self.log(f\"Converted to string with length: {len(result)}\")\n\n        message = Message(text=result)\n        self.status = message\n        return message\n"
+              },
+              "input_data": {
+                "_input_type": "HandleInput",
+                "advanced": false,
+                "api_editable": false,
+                "display_name": "JSON or Table",
+                "dynamic": false,
+                "info": "Accepts a DataFrame, a Data object, or a list of Data objects.",
+                "input_types": [
+                  "DataFrame",
+                  "Table",
+                  "Data",
+                  "JSON"
+                ],
+                "list": false,
+                "list_add_label": "Add More",
+                "name": "input_data",
+                "override_skip": false,
+                "placeholder": "",
+                "required": true,
+                "show": true,
+                "title_case": false,
+                "trace_as_metadata": true,
+                "track_in_telemetry": false,
+                "type": "other",
+                "value": ""
+              },
+              "mode": {
+                "_input_type": "TabInput",
+                "advanced": false,
+                "api_editable": false,
+                "display_name": "Mode",
+                "dynamic": false,
+                "info": "Convert into raw string instead of using a template.",
+                "name": "mode",
+                "options": [
+                  "Parser",
+                  "Stringify"
+                ],
+                "override_skip": false,
+                "placeholder": "",
+                "real_time_refresh": true,
+                "required": false,
+                "show": true,
+                "title_case": false,
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "track_in_telemetry": true,
+                "type": "tab",
+                "value": "Parser"
+              },
+              "pattern": {
+                "_input_type": "MultilineInput",
+                "advanced": false,
+                "ai_enabled": false,
+                "api_editable": false,
+                "copy_field": false,
+                "display_name": "Template",
+                "dynamic": true,
+                "info": "Use variables within curly brackets to extract column values for DataFrames or key values for Data.For example: `Name: {Name}, Age: {Age}, Country: {Country}`",
+                "input_types": [
+                  "Message"
+                ],
+                "list": false,
+                "list_add_label": "Add More",
+                "load_from_db": false,
+                "multiline": true,
+                "name": "pattern",
+                "override_skip": false,
+                "password": false,
+                "placeholder": "",
+                "required": true,
+                "show": true,
+                "title_case": false,
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "track_in_telemetry": false,
+                "type": "str",
+                "value": "{text}"
+              },
+              "sep": {
+                "_input_type": "MessageTextInput",
+                "advanced": true,
+                "api_editable": false,
+                "display_name": "Separator",
+                "dynamic": false,
+                "info": "String used to separate rows/items.",
+                "input_types": [
+                  "Message"
+                ],
+                "list": false,
+                "list_add_label": "Add More",
+                "load_from_db": false,
+                "name": "sep",
+                "override_skip": false,
+                "placeholder": "",
+                "required": false,
+                "show": true,
+                "title_case": false,
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "track_in_telemetry": false,
+                "type": "str",
+                "value": "\n\n---\n\n"
+              }
+            },
+            "tool_mode": false
+          },
+          "showNode": true,
+          "selected_output": "parsed_text"
+        },
+        "selected": false,
+        "dragging": false,
+        "measured": {
+          "width": 320,
+          "height": 331
         }
       }
     ],
@@ -5043,34 +5044,6 @@
         "className": "",
         "data": {
           "sourceHandle": {
-            "dataType": "TypeConverterComponent",
-            "id": "TypeConverterComponent-ZnCkR",
-            "name": "message_output",
-            "output_types": [
-              "Message"
-            ]
-          },
-          "targetHandle": {
-            "fieldName": "Context",
-            "id": "Prompt Template-i0HlP",
-            "inputTypes": [
-              "Message"
-            ],
-            "type": "str"
-          }
-        },
-        "id": "reactflow__edge-TypeConverterComponent-ZnCkR{œdataTypeœ:œTypeConverterComponentœ,œidœ:œTypeConverterComponent-ZnCkRœ,œnameœ:œmessage_outputœ,œoutput_typesœ:[œMessageœ]}-Prompt Template-i0HlP{œfieldNameœ:œContextœ,œidœ:œPrompt Template-i0HlPœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}",
-        "selected": false,
-        "source": "TypeConverterComponent-ZnCkR",
-        "sourceHandle": "{œdataTypeœ:œTypeConverterComponentœ,œidœ:œTypeConverterComponent-ZnCkRœ,œnameœ:œmessage_outputœ,œoutput_typesœ:[œMessageœ]}",
-        "target": "Prompt Template-i0HlP",
-        "targetHandle": "{œfieldNameœ:œContextœ,œidœ:œPrompt Template-i0HlPœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}"
-      },
-      {
-        "animated": false,
-        "className": "",
-        "data": {
-          "sourceHandle": {
             "dataType": "ChatInput",
             "id": "ChatInput-dIHGC",
             "name": "message",
@@ -5093,38 +5066,6 @@
         "sourceHandle": "{œdataTypeœ:œChatInputœ,œidœ:œChatInput-dIHGCœ,œnameœ:œmessageœ,œoutput_typesœ:[œMessageœ]}",
         "target": "ext:datastax:AstraDBVectorStoreComponent@official-hubMT",
         "targetHandle": "{œfieldNameœ:œsearch_queryœ,œidœ:œext:datastax:AstraDBVectorStoreComponent@official-hubMTœ,œinputTypesœ:[œMessageœ],œtypeœ:œqueryœ}"
-      },
-      {
-        "animated": false,
-        "className": "",
-        "data": {
-          "sourceHandle": {
-            "dataType": "ext:datastax:AstraDBVectorStoreComponent@official",
-            "id": "ext:datastax:AstraDBVectorStoreComponent@official-hubMT",
-            "name": "search_results",
-            "output_types": [
-              "JSON"
-            ]
-          },
-          "targetHandle": {
-            "fieldName": "input_data",
-            "id": "TypeConverterComponent-ZnCkR",
-            "inputTypes": [
-              "Message",
-              "Data",
-              "JSON",
-              "DataFrame",
-              "Table"
-            ],
-            "type": "other"
-          }
-        },
-        "id": "reactflow__edge-ext:datastax:AstraDBVectorStoreComponent@official-hubMT{œdataTypeœ:œext:datastax:AstraDBVectorStoreComponent@officialœ,œidœ:œext:datastax:AstraDBVectorStoreComponent@official-hubMTœ,œnameœ:œsearch_resultsœ,œoutput_typesœ:[œJSONœ]}-TypeConverterComponent-ZnCkR{œfieldNameœ:œinput_dataœ,œidœ:œTypeConverterComponent-ZnCkRœ,œinputTypesœ:[œMessageœ,œDataœ,œJSONœ,œDataFrameœ,œTableœ],œtypeœ:œotherœ}",
-        "selected": false,
-        "source": "ext:datastax:AstraDBVectorStoreComponent@official-hubMT",
-        "sourceHandle": "{œdataTypeœ:œext:datastax:AstraDBVectorStoreComponent@officialœ,œidœ:œext:datastax:AstraDBVectorStoreComponent@official-hubMTœ,œnameœ:œsearch_resultsœ,œoutput_typesœ:[œJSONœ]}",
-        "target": "TypeConverterComponent-ZnCkR",
-        "targetHandle": "{œfieldNameœ:œinput_dataœ,œidœ:œTypeConverterComponent-ZnCkRœ,œinputTypesœ:[œMessageœ,œDataœ,œJSONœ,œDataFrameœ,œTableœ],œtypeœ:œotherœ}"
       },
       {
         "animated": false,
@@ -5274,6 +5215,65 @@
         "sourceHandle": "{œdataTypeœ:œChatInputœ,œidœ:œChatInput-dIHGCœ,œnameœ:œmessageœ,œoutput_typesœ:[œMessageœ]}",
         "target": "ext:groq:GroqModel@official-g2ip7",
         "targetHandle": "{œfieldNameœ:œinput_valueœ,œidœ:œext:groq:GroqModel@official-g2ip7œ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}"
+      },
+      {
+        "animated": false,
+        "className": "",
+        "selected": false,
+        "data": {
+          "sourceHandle": {
+            "dataType": "ParserComponent",
+            "id": "ParserComponent-gv7je",
+            "name": "parsed_text",
+            "output_types": [
+              "Message"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "Context",
+            "id": "Prompt Template-i0HlP",
+            "inputTypes": [
+              "Message"
+            ],
+            "type": "str"
+          }
+        },
+        "id": "reactflow__edge-ParserComponent-gv7je{œdataTypeœ:œParserComponentœ,œidœ:œParserComponent-gv7jeœ,œnameœ:œparsed_textœ,œoutput_typesœ:[œMessageœ]}-Prompt Template-i0HlP{œfieldNameœ:œContextœ,œidœ:œPrompt Template-i0HlPœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}",
+        "source": "ParserComponent-gv7je",
+        "sourceHandle": "{œdataTypeœ:œParserComponentœ,œidœ:œParserComponent-gv7jeœ,œnameœ:œparsed_textœ,œoutput_typesœ:[œMessageœ]}",
+        "target": "Prompt Template-i0HlP",
+        "targetHandle": "{œfieldNameœ:œContextœ,œidœ:œPrompt Template-i0HlPœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}"
+      },
+      {
+        "animated": false,
+        "className": "",
+        "selected": false,
+        "data": {
+          "sourceHandle": {
+            "dataType": "ext:datastax:AstraDBVectorStoreComponent@official",
+            "id": "ext:datastax:AstraDBVectorStoreComponent@official-hubMT",
+            "name": "search_results",
+            "output_types": [
+              "JSON"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "input_data",
+            "id": "ParserComponent-gv7je",
+            "inputTypes": [
+              "DataFrame",
+              "Table",
+              "Data",
+              "JSON"
+            ],
+            "type": "other"
+          }
+        },
+        "id": "reactflow__edge-ext:datastax:AstraDBVectorStoreComponent@official-hubMT{œdataTypeœ:œext:datastax:AstraDBVectorStoreComponent@officialœ,œidœ:œext:datastax:AstraDBVectorStoreComponent@official-hubMTœ,œnameœ:œsearch_resultsœ,œoutput_typesœ:[œJSONœ]}-ParserComponent-gv7je{œfieldNameœ:œinput_dataœ,œidœ:œParserComponent-gv7jeœ,œinputTypesœ:[œDataFrameœ,œTableœ,œDataœ,œJSONœ],œtypeœ:œotherœ}",
+        "source": "ext:datastax:AstraDBVectorStoreComponent@official-hubMT",
+        "sourceHandle": "{œdataTypeœ:œext:datastax:AstraDBVectorStoreComponent@officialœ,œidœ:œext:datastax:AstraDBVectorStoreComponent@official-hubMTœ,œnameœ:œsearch_resultsœ,œoutput_typesœ:[œJSONœ]}",
+        "target": "ParserComponent-gv7je",
+        "targetHandle": "{œfieldNameœ:œinput_dataœ,œidœ:œParserComponent-gv7jeœ,œinputTypesœ:[œDataFrameœ,œTableœ,œDataœ,œJSONœ],œtypeœ:œotherœ}"
       }
     ],
     "viewport": {
@@ -5283,7 +5283,7 @@
     }
   },
   "is_component": false,
-  "updated_at": "2026-10-07T21:45:02+00:00",
+  "updated_at": "2026-10-07T22:26:48+00:00",
   "endpoint_name": null,
   "tags": [],
   "locked": false,
