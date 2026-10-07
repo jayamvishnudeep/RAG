@@ -16,6 +16,9 @@ It is "naive" RAG on purpose: one index, one retrieval step, top-K similarity,
 no re-ranking, no query rewriting — the baseline to compare more advanced RAG
 patterns against.
 
+The same pipeline built in **Langflow**, with Astra DB, NVIDIA embeddings, Groq
+and 500 VWO test cases, is in [`langflow/`](langflow/) and has its own README.
+
 ## Contents
 
 | Path | What it is |
@@ -27,8 +30,9 @@ patterns against.
 | [n8n workflows/Phase_1_Ingestion.png](n8n%20workflows/Phase_1_Ingestion.png) | Close-up of version 2's ingestion phase |
 | [n8n workflows/Phase_2_RAG.png](n8n%20workflows/Phase_2_RAG.png) | Close-up of version 2's chat phase after a successful run |
 | [n8n workflows/Result_Fetch_testcases_successfully.png](n8n%20workflows/Result_Fetch_testcases_successfully.png) | A real answer from version 2's chat |
-| [data/Wingify_Login_100_Jira_Test_Cases.csv](data/Wingify_Login_100_Jira_Test_Cases.csv) | The knowledge base: 100 test cases, `WING-LOGIN-TC-001` to `-100`, 10 per category |
-| [data/pinecone vector database.png](data/pinecone%20vector%20database.png) | The `rag-naive` index in the Pinecone console after a version-2 ingest |
+| [n8n workflows/data/Wingify_Login_100_Jira_Test_Cases.csv](n8n%20workflows/data/Wingify_Login_100_Jira_Test_Cases.csv) | The knowledge base: 100 test cases, `WING-LOGIN-TC-001` to `-100`, 10 per category |
+| [n8n workflows/data/pinecone vector database.png](n8n%20workflows/data/pinecone%20vector%20database.png) | The `rag-naive` index in the Pinecone console after a version-2 ingest |
+| [langflow/](langflow/) | The Langflow version: flow export, its CSV, screenshots and a README |
 
 The CSV covers ten categories of 10 cases each: Authentication, Email
 validation, Password and boundaries, Navigation and usability, Password
@@ -108,7 +112,7 @@ vectors are closest by cosine similarity. Both workflows use one index,
 `rag-naive`, in the `__default__` namespace. The ingestion phase writes to it,
 and the chat agent's tool reads from it.
 
-![rag-naive index in the Pinecone console](data/pinecone%20vector%20database.png)
+![rag-naive index in the Pinecone console](n8n%20workflows/data/pinecone%20vector%20database.png)
 
 Here is what the console shows after one version-2 ingest of the CSV:
 
@@ -170,7 +174,7 @@ a few thousand WUs, well inside the free limits.
 
 1. Open the **On form submission** node and click **Test step** (or use the
    form's test URL).
-2. Upload [data/Wingify_Login_100_Jira_Test_Cases.csv](data/Wingify_Login_100_Jira_Test_Cases.csv)
+2. Upload [n8n workflows/data/Wingify_Login_100_Jira_Test_Cases.csv](n8n%20workflows/data/Wingify_Login_100_Jira_Test_Cases.csv)
    in the `Docs` field and submit.
 3. Version 2 loops 100 times, one row per pass, then ends on **Ingestion
    Complete**. Check the index's record count in the Pinecone console. After one
