@@ -69,8 +69,10 @@ inventing one.
 
 ![Further down the answer: INVALID-039, script tag in email](advanced_rag_result_answer_continued.png)
 
-The [Naive RAG flow](../../01_Naive_RAG/langflow/), given the same question,
-answered with made-up IDs (`N-001`, `N-002`…) and a generic login form.
+The [Naive RAG flow](../../01_Naive_RAG/langflow/), with the same prompt and
+the same model, found only **two** relevant cases for this question. Two of its
+four search results were positive cases (`VALID-018`, `VALID-046`). With the
+prompt and model held equal, the difference comes from HyDE and reranking.
 
 ## The prompt
 
