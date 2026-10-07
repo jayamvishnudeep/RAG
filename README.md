@@ -1,8 +1,8 @@
 # RAG
 
-Two retrieval-augmented generation (RAG) projects, both built around QA
-documents: one a local app that shows every stage of the pipeline, the other a
-chatbot over a test-case library.
+Retrieval-augmented generation (RAG) projects built around QA documents: a
+local app that shows every stage of the pipeline, and chatbots over a test-case
+library, from a naive baseline to an advanced pipeline with HyDE and reranking.
 
 ![RAG Explorer: the Search tab ranking every chunk against a query](RAG_Explorer/screenshots/06-search-full.png)
 
@@ -11,7 +11,8 @@ chatbot over a test-case library.
 | Project | What it is | Stack |
 |---|---|---|
 | [RAG_Explorer](RAG_Explorer/) | A local web app that indexes a PDF and shows each stage: extracted text, chunks, embeddings, similarity scores, the top-K results and the exact prompt the model receives. Sliders for chunk size and overlap redraw the chunk map and re-rank the results live | Node, React, LanceDB, Nomic embeddings (local ONNX), Groq |
-| [01_Naive_RAG](01_Naive_RAG/) | Two n8n workflows that load 100 Jira-style login test cases into Pinecone and answer questions about them through a chat agent that may only use what it retrieved | n8n, Pinecone, OpenAI `text-embedding-3-large`, `gpt-5-mini` |
+| [01_Naive_RAG](01_Naive_RAG/) | The baseline, built twice. Two n8n workflows that load 100 Jira-style login test cases into Pinecone and answer through a chat agent; and a Langflow flow that loads 500 VWO test cases into Astra DB | n8n, Pinecone, OpenAI; Langflow, Astra DB (NVIDIA embeddings), Groq |
+| [02_Advanced_RAG](02_Advanced_RAG/) | Naive RAG plus HyDE (search with a hypothetical answer), Cohere reranking of 20 candidates down to 4, and a prompt that answers only from those and cites each Test Case ID | Langflow, Astra DB, Cohere Rerank, Groq |
 
 Each folder has its own README with setup and usage.
 
@@ -21,6 +22,8 @@ Each folder has its own README with setup and usage.
   (RAG Explorer's sliders), and why a test case split across chunks loses its ID
   unless the ID is stored as metadata (the second Naive RAG workflow)
 - **Embeddings and vector search**: local embeddings with LanceDB, and hosted
-  ones with Pinecone, both using cosine similarity
-- **Grounded answers**: both projects tell the model to answer only from the
+  ones with Pinecone and Astra DB, all using cosine similarity
+- **Better retrieval**: HyDE and reranking, and the difference they make to the
+  same question (02_Advanced_RAG)
+- **Grounded answers**: the projects tell the model to answer only from the
   retrieved text, cite its sources, and say so when the answer isn't there
