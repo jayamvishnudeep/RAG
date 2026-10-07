@@ -4,7 +4,7 @@ The same idea as the n8n workflows in [`../n8n workflows`](../n8n%20workflows/),
 built in Langflow: load a CSV of 500 VWO login test cases into a vector
 database, then ask questions about them in a chat.
 
-![The 01_Naive_RAG flow in Langflow: an INGESTION group (Read File, Parser, Split Text, Astra DB) above a RAG group (Chat Input, Astra DB, Type Convert, Prompt Template, Groq, Chat Output)](naive_rag_langflow_flow.png)
+![The 01_Naive_RAG flow in Langflow: an INGESTION group (Read File, Parser, Split Text, Astra DB) above a RAG group (Chat Input, Astra DB, Parser, Prompt Template, Groq, Chat Output)](naive_rag_langflow_flow.png)
 
 ## Contents
 
@@ -36,8 +36,8 @@ The flow has two independent parts.
 |---|---|
 | Chat Input | The question |
 | Astra DB (search) | Finds the 4 chunks most similar to the question in the same collection |
-| Type Convert | Turns the search results into text |
-| Prompt Template | Puts the results and the question together |
+| Parser | Joins all 4 results into one block of text, separated by `---` |
+| Prompt Template | Tells the model to answer only from those results and cite each Test Case ID (the same prompt as [Advanced RAG](../../02_Advanced_RAG/langflow/#the-prompt)) |
 | Groq | `openai/gpt-oss-120b` writes the answer |
 | Chat Output | Shows it in the Playground |
 
@@ -73,24 +73,34 @@ re-ingest.
 **2. Ask.** Open **Playground** and ask a question, for example
 `give me the negative test cases for the login scenario`.
 
-![Playground: the question "give me the negative test cases for the login scenario" and the start of the answer, a table of test cases numbered N-001 onwards](naive_rag_result_question_and_answer.png)
+![Playground: the question "give me the negative test cases for the login scenario" and an answer table with INVALID-074 (server stack trace exposure) and INVALID-070 (session after account deactivation)](naive_rag_result_question_and_answer.png)
 
-![The same answer further down: cross-site scripting in the password field, and over-long username and password cases](naive_rag_result_answer_continued.png)
+![The end of the answer: "The context only contains the two invalid login cases shown above; no additional negative login test cases are available in the provided information."](naive_rag_result_answer_continued.png)
 
 ### What this result shows: naive RAG's limits
 
-The answer is well formed, but it does **not** come from the knowledge base.
-It uses its own IDs (`N-001`, `N-002`…) instead of the VWO ones (`INVALID-001`
-etc.) and describes a generic login form. For that question, search returned 4
-chunks, two of them positive cases (`VALID-018`, `VALID-046`), and nothing told
-the model to stay within them, so it answered from general knowledge.
+The answer is **grounded**: every case in it is real and cited by ID, and it
+says plainly that it found only two. But two is all naive retrieval could give
+it. Searching with the question itself returned 4 chunks:
 
-That is the baseline this flow is here to show. Three changes would ground the
-answers:
+| Chunk | Test case | Used? |
+|---|---|---|
+| 1 | VALID-018: login after failed attempt | No, a positive case |
+| 2 | INVALID-074: server stack trace exposure | Yes |
+| 3 | VALID-046: dark theme | No, a positive case |
+| 4 | INVALID-070: session after account deactivation | Yes |
 
-| Change | Why |
+Half of what reached the model was off-topic, and the expected results were cut
+off (shown as `---`) because size-based chunks split a test case partway through.
+
+The model is doing its job; the weak point is retrieval. That is what
+[02_Advanced_RAG](../../02_Advanced_RAG/langflow/) improves. HyDE searches with
+a hypothetical answer instead of the bare question, and Cohere reranks 20
+candidates down to the best 4. For the same question it returns four relevant
+negative cases instead of two.
+
+| Further improvement | Why |
 |---|---|
-| Give the Prompt Template real instructions: answer only from the context, cite every Test Case ID, say when the answer isn't there | The template is currently just two labels, so the model treats the context as optional |
 | Raise **Number of Results** on the search node from 4 to about 15 | "All negative cases" can't be answered from 4 chunks |
 | One chunk per test case instead of 1,000-character cuts | Size-based chunks start mid-case ("Expected Result: …") with no ID, or run across two cases |
 
@@ -103,3 +113,5 @@ answers:
 | `The model … does not exist or you do not have access to it` from Groq | Groq retired that model. Langflow's list is out of date, so pick a current one such as `openai/gpt-oss-120b` |
 | `_ssl.c … handshake operation timed out` on Astra DB | A network blip. Run it again |
 | Answers repeat the same test case | The collection was ingested more than once. Clear it and ingest once |
+| The answer only ever mentions one test case | The node between the search Astra DB and the Prompt must be a **Parser** (template `{text}`). A **Type Convert** node set to *Message* keeps only the first result |
+| The answer invents IDs or uses generic examples like `user@example.com` | The Prompt Template has lost its instructions. Restore the prompt from [Advanced RAG](../../02_Advanced_RAG/langflow/#the-prompt) |
