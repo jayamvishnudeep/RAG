@@ -11,7 +11,7 @@ Four facts about the problem drove every decision:
 1. **The data is heterogeneous.** Java and TypeScript code, 5,000-row test case sheets, PDFs, meeting
    transcripts, Jira tickets, diagrams and build logs each have a different natural unit (a method, a row, a
    section, a speaker turn, a ticket, a build). Cutting them all into fixed 1,000-character pieces, as
-   [01_Naive_RAG](../../01_Naive_RAG/) does, splits test cases in half and separates a method from its class.
+   [01_Naive_RAG](https://github.com/jayamvishnudeep/RAG/tree/main/01_Naive_RAG) does, splits test cases in half and separates a method from its class.
    So every source gets its own loader that splits on its own structure.
 2. **QA questions are full of exact identifiers.** `WING-LOGIN-TC-042`, `QAB-101`, `RetryAnalyzer`,
    `testLoginPositiveVWO`, "build 142". Dense embeddings capture meaning but are weak at exact tokens; BM25 is
